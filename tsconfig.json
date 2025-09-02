@@ -1,4 +1,7 @@
-{
+{"watchOptions": {
+   "watchFile": "dynamicPriorityPolling",
+   "watchDirectory": "dynamicPriorityPolling",
+   "excludeDirectories": ["**/node_modules", "dist"]},
   "compilerOptions": {
     "module": "nodenext",
     "moduleResolution": "nodenext",

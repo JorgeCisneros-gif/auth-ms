@@ -1,8 +1,29 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { envs } from './config/env';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3001);
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule,
+    {transport: Transport.NATS,
+      options:{
+        servers: envs.natsServers
+      }
+    }
+
+  );
+const logger = new Logger('Main-Auth')
+  app.useGlobalPipes(
+ new ValidationPipe({
+ whitelist: true,
+ forbidNonWhitelisted: true,
+ })
+);
+
+
+ await app.listen();
+  logger.log(`Auth Microservices running or port ${envs.port}`)
+
 }
 bootstrap();
