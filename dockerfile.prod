@@ -1,0 +1,40 @@
+#Dependencias
+FROM node:21-alpine3.19 AS deps
+
+WORKDIR /usr/src/app
+
+COPY package.json ./
+COPY package-lock.json ./
+
+RUN npm install
+
+#Builder - constriccion de la aplicacion
+FROM node:21-alpine3.19 AS builder
+
+WORKDIR /usr/src/app
+# Copiar de dependencias
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+
+# Copiar de la aplicacion
+COPY . .
+# RUN npm run test
+RUN npm run build
+
+RUN npm ci -f  --only=production && npm cache clean --force
+
+RUN npx prisma generate
+#Creacion de Imagen final
+
+FROM node:21-alpine3.19 AS prod
+WORKDIR /usr/src/app
+
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/dist ./dist
+
+ENV NODE_ENV=production
+
+USER node
+
+EXPOSE 3000
+
+CMD ["node", "dist/main.js"]
